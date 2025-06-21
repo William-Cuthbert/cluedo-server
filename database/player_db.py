@@ -8,6 +8,8 @@ if "players" not in db.list_collection_names():
 def add_player(player):
     """Add a new player to the database."""
     try:
+        if get_player(player["id"]):
+            raise ValueError("Player with this ID already exists.")
         players.insert_one(player)
     except Exception as e:
         print(f"Error adding player: {e}")

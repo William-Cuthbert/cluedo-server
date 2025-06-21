@@ -1,5 +1,6 @@
 import uuid
 from entity.player import Player
+from enums import GameState
 
 class Game:
     def __init__(self, players: list[Player] = None, case_file: dict[str, str] = None, 
@@ -9,7 +10,7 @@ class Game:
         self._players = players or []
         self._case_file = case_file or {}
         self._cards = cards or []
-        self._state = state
+        self._state = GameState.WAITING_FOR_PLAYERS.value
         self._current_turn = current_turn
         self._turn_over = turn_over or []
     
@@ -47,6 +48,8 @@ class Game:
     
     @state.setter
     def state(self, state):
+        if state not in GameState._value2member_map_:
+            raise ValueError(f"Invalid state: {state}.")
         self._state = state
         
     @property
@@ -70,6 +73,9 @@ class Game:
         if player not in self._players:
             self._players.append(player)
             player.add_game(self)
+    
+    def update_state(self, new_state: GameState):
+        self.state = new_state.value
     
     def __repr__(self):
         return f"Game({self._game_id}, {self._players}, {self._case_file}, {self._cards}, {self._state}, {self._current_turn}, {self._turn_over})"

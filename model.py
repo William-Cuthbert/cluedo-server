@@ -1,31 +1,28 @@
 import random
-from uuid import UUID
+from uuid import uuid4
 from database import db
 from database.game_db import add_game, get_game, update_game_with_player
 from exceptions import GameFullError
-
-CHARACTERS = ("Professor Plum","Miss Scarlett","Mrs Peacock","Colonel Mustard","Reverend Green")
-ROOMS = ("hall","study","ballroom","billiards","bedroom","dining room","kitchen","lounge","conservatory","library")
-WEAPONS = ("candlestick","wrench","lead pipe","rope","dagger","revolver")
+from enums import Character, Room, Weapon, GameState
 
 def generate_case_file() -> dict[str, str]:
     """Sets the case file"""
     return {
-        "suspect": random.choice(CHARACTERS),
-        "weapon": random.choice(WEAPONS),
-        "room": random.choice(ROOMS)
+        "suspect": random.choice(list(Character)).value,
+        "weapon": random.choice(list(Weapon)).value,
+        "room": random.choice(list(Room)).value
     }
 
 def distribute_cards(case_file: dict[str, str]) -> list[str]:
     """Distributes the remaining cards to players."""
-    remaining_cards = [card for card in CHARACTERS + WEAPONS + ROOMS 
-                       if card not in case_file.values()]
+    all_cards = list(Character) + list(Weapon) + list(Room)
+    remaining_cards = [card.value for card in all_cards if card.value not in case_file.values()]
     random.shuffle(remaining_cards)
     return remaining_cards
 
 def create_game() -> dict[str, str]:
     """Creates a new game."""
-    game_id = UUID().str()
+    game_id = str(uuid4())
     case_file = generate_case_file()
     cards = distribute_cards(case_file)
     game = {
@@ -43,13 +40,13 @@ def create_game() -> dict[str, str]:
 def join_game(game_id: str, player_name: str) -> dict[str, str]:
     """Adds a player to a new game."""
     game = get_game(game_id)
-    if game.get("state", None) != "waiting":
+    if game.get("state", None) != GameState.WAITING_FOR_PLAYERS.value:
         raise ValueError("Game is already in progress.")
     if len(game["players"]) >= 6:
         raise GameFullError("Game is full.")
     player = {
         "id": len(game["players"]) + 1,
-        "player_id": UUID().str(),
+        "player_id": str(uuid4()),
         "name": player_name,
         "cards": []
     }
